@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
     volumes:
       - /proc:/host/proc:ro
-      - /sys:/host/sys:ro 
+      - /sys:/host/sys:ro
       - /:/rootfs:ro 
     command: 
       - '--path.procfs=/host/proc' 
@@ -25,21 +25,18 @@ services:
       - monitoring 
 
   prometheus: 
-    image: prom/prometheus:latest 
-    user: "501" 
-    environment: 
-      - PUID=501 
-      - PGID=501 
+    image: prom/prometheus:latest
+    user: ${MY_UID}:${MY_GID}
     container_name: prometheus 
     restart: unless-stopped
     volumes: 
-      - ./prometheus/prometheus.yml:/Users/hoangminhquan/Desktop/QH/internship/monitor_stack/prometheus/prometheus/prometheus.yml 
-      - ./prometheus:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus_data:/prometheus
     command: 
       - '--config.file=/etc/prometheus/prometheus.yml' 
       - '--storage.tsdb.path=/prometheus' 
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries' 
-      - '--web.console.templates=/usr/share/prometheus/consoles' 
+      - '--web.console.libraries=/etc/prometheus/console_libraries' 
+      - '--web.console.templates=/etc/prometheus/consoles' 
       - '--web.enable-lifecycle' 
     ports: 
       - 9090:9090 
@@ -52,15 +49,16 @@ services:
     ports: 
       - 3000:3000 
     restart: unless-stopped 
-    volumes:
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources 
-      - ./grafana:/var/lib/grafana 
+    # volumes:
+    #   - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources 
+    #   - ./grafana:/var/lib/grafana 
     networks: 
       - monitoring 
 
   postgres:
     image: postgres:latest
     container_name: postgres
+    user: ${MY_UID}:${MY_GID}
     ports:
       - 5432:5432
     volumes:
@@ -72,24 +70,24 @@ services:
     networks:
       - monitoring
   
-  postgres-exporter:
-    container_name: postgresql-exporter
-    image: prometheuscommunity/postgres-exporter
-    ports:
-      - 9187:9817
-    environment:
-      DATA_SOURCE_NAME : "postgresql://example:example@postgres:5432/example?sslmodel=disable"
-    depends_on:
-      - postgres
-      - prometheus
+  # postgres-exporter:
+  #   container_name: postgresql-exporter
+  #   image: prometheuscommunity/postgres-exporter
+  #   ports:
+  #     - 9187:9817
+  #   environment:
+  #     DATA_SOURCE_NAME : "postgresql://example:example@postgres:5432/example?sslmodel=disable"
+  #   depends_on:
+  #     - postgres
+  #     - prometheus
 
-  pgadmin:
-    image: dpage/pgadmin4:6
-    container_name: pgadmin
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@email.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_LISTEN_PORT: 5050
-    ports:
-      - "5050:5050"
+  # pgadmin:
+  #   image: dpage/pgadmin4:6
+  #   container_name: pgadmin
+  #   restart: always
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@email.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #     PGADMIN_LISTEN_PORT: 5050
+  #   ports:
+  #     - "5050:5050"
